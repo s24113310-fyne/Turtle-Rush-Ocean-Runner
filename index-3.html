@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Turtle Bridge Fun</title>
+<style>
+  /* Import Bubbly Fonts */
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Titan+One&family=Nunito:wght@700&display=swap');
+
+  /* --- 1. GENERAL STYLES --- */
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Nunito', sans-serif;
+    background-color: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    touch-action: none; 
+  }
+
+  /* --- 2. GAME CONTAINER (Phone Shape) --- */
+  #game-container {
+    position: relative;
+    width: 100%;
+    max-width: 450px; 
+    height: 100%;
+    max-height: 850px;
+    
+    /* Ocean Background Base */
+    background: linear-gradient(to bottom, #87CEEB 0%, #4FC3F7 40%, #0288D1 100%);
+    background-size: cover; 
+    background-position: center bottom;
+    
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    border-radius: 20px;
+    border: 4px solid #4a3b2a; 
+  }
+
+  /* --- 3. SCENERY (CSS Art) --- */
+  /* Clouds */
+  .cloud {
+    position: absolute; background: white; border-radius: 50%; opacity: 0.8;
+    animation: floatCloud 20s infinite linear;
+  }
+  .cloud::after, .cloud::before {
+    content: ''; position: absolute; background: white; border-radius: 50%;
+  }
+  .c1 { width: 60px; height: 60px; top: 50px; left: -60px; }
+  .c1::after { width: 40px; height: 40px; top: -20px; left: 10px; }
+  .c1::before { width: 40px; height: 40px; top: 10px; left: 35px; }
+  
+  .c2 { width: 50px; height: 50px; top: 100px; left: -60px; animation-duration: 25s; animation-delay: 10s; }
+  
+  @keyframes floatCloud { from { left: -80px; } to { left: 120%; } }
+
+  /* Sand Banks (Foreground) */
+  .sand-bank {
+    position: absolute; bottom: 0; width: 140px; height: 120px;
+    background: #F4D03F; /* Sand Yellow */
+    border-top: 4px solid #F1C40F;
+    z-index: 15;
+  }
+  .sb-left { 
+    left: 0; 
+    border-radius: 0 100% 0 0; 
+    box-shadow: 5px -5px 0 rgba(0,0,0,0.05);
+  }
+  .sb-right { 
+    right: 0; 
+    border-radius: 100% 0 0 0; 
+    box-shadow: -5px -5px 0 rgba(0,0,0,0.05);
+  }
+
+  /* Palm Trees (Decor) */
+  .palm-trunk {
+    position: absolute; bottom: 80px; right: 20px; width: 15px; height: 100px;
+    background: #8D6E63; border-radius: 10px; transform: rotate(-10deg); z-index: 14;
+  }
+  .palm-leaves {
+    position: absolute; bottom: 160px; right: 20px; width: 0; height: 0; z-index: 16;
+  }
+  .leaf {
+    position: absolute; width: 60px; height: 20px; background: #4CAF50; border-radius: 50% 50% 0 0;
+    transform-origin: left center;
+  }
+  .l1 { transform: rotate(0deg); } .l2 { transform: rotate(60deg); } 
+  .l3 { transform: rotate(120deg); } .l4 { transform: rotate(180deg); }
+  .l5 { transform: rotate(240deg); } .l6 { transform: rotate(300deg); }
+
+  /* --- 4. BRIDGE (Perspective) --- */
+  #bridge-area {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 10;
+    perspective: 600px;
+  }
+  
+  .bridge-container {
+    position: absolute; top: 0; bottom: 0; left: 50%; width: 240px; transform: translateX(-50%);
+  }
+
+  .rope {
+    position: absolute; top: 0; bottom: 0; width: 8px; background: #8D6E63;
+    background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 8px);
+    z-index: 12;
+  }
+  .rope-left { left: 10%; } .rope-right { right: 10%; }
+
+  .plank {
+    position: absolute; height: 35px;
+    background: linear-gradient(to bottom, #D7CCC8, #A1887F);
+    border-radius: 4px; border-bottom: 4px solid #5D4037;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 11;
+  }
+
+  /* --- 5. CHARACTERS & OBJECTS --- */
+  .rock {
+    position: absolute; width: 45px; height: 40px; background: #90A4AE;
+    border-radius: 40% 50% 40% 45%; border-bottom: 6px solid #546E7A;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.2); z-index: 20; display: flex; justify-content: center; align-items: center;
+  }
+  .coin {
+    position: absolute; width: 32px; height: 32px;
+    background: radial-gradient(circle at 30% 30%, #FFD700, #FDB931);
+    border-radius: 50%; border: 2px solid #B8860B; z-index: 25; box-shadow: 0 0 15px #FFD700;
+    animation: spin 1s infinite linear; display: flex; justify-content: center; align-items: center;
+    font-weight: bold; color: #B8860B; font-size: 16px;
+  }
+  @keyframes spin { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+  #player {
+    position: absolute; bottom: 110px; left: 50%; width: 60px; height: 60px;
+    transform: translateX(-50%); z-index: 50; transition: left 0.15s ease-out; 
+    font-size: 55px; display: flex; justify-content: center; align-items: center;
+    animation: runWaddle 0.4s infinite alternate ease-in-out;
+    filter: drop-shadow(0 5px 5px rgba(0,0,0,0.4));
+  }
+  @keyframes runWaddle { from { transform: translateX(-50%) rotate(-5deg); } to { transform: translateX(-50%) rotate(5deg); } }
+
+  /* --- 6. WELCOME SCREEN (The New Design) --- */
+  #welcome-screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 999;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 60px;
+    background: linear-gradient(to bottom, #4FC3F7 0%, rgba(255,255,255,0) 80%);
+  }
+
+  /* 3D LOGO TEXT */
+  .logo-container {
+    display: flex; flex-direction: column; align-items: center;
+    transform: rotate(-2deg);
+    margin-bottom: 20px;
+    filter: drop-shadow(0 5px 0px rgba(0,0,0,0.2));
+  }
+  .logo-text {
+    font-family: 'Titan One', cursive;
+    text-transform: uppercase;
+    line-height: 0.85;
+    -webkit-text-stroke: 4px white; /* White outline */
+    paint-order: stroke fill;
+    text-shadow: 2px 4px 0px rgba(0,0,0,0.2);
+  }
+  .word-turtle {
+    font-size: 55px; color: #FF9800; /* Orange */
+    background: linear-gradient(to bottom, #FFB74D, #F57C00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .word-bridge {
+    font-size: 65px; color: #03A9F4; /* Blue */
+    background: linear-gradient(to bottom, #4FC3F7, #0288D1);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .word-fun {
+    font-size: 55px; color: #FFC107; /* Yellow */
+    background: linear-gradient(to bottom, #FFEB3B, #FF8F00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  /* Decor Turtle on Welcome Screen */
+  .decor-turtle {
+    position: absolute; bottom: 80px; left: 20px;
+    font-size: 100px; z-index: 20;
+    animation: bounceTurtle 2s infinite ease-in-out;
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+  }
+  @keyframes bounceTurtle {
+    0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); }
+  }
+
+  /* BIG GREEN START BUTTON */
+  .btn-start-big {
+    position: absolute; bottom: 40px;
+    background: linear-gradient(to bottom, #76FF03, #64DD17);
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 32px;
+    text-transform: uppercase;
+    padding: 15px 80px;
+    border-radius: 20px;
+    border: none;
+    border-bottom: 8px solid #33691E; /* Dark green 3D bottom */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 30;
+    transition: transform 0.1s;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.2);
+  }
+  .btn-start-big:active {
+    transform: translateY(4px); border-bottom-width: 4px;
+  }
+
+  /* --- 7. REGISTRATION MODAL --- */
+  .modal-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+    z-index: 200; display: none;
+    justify-content: center; align-items: center; flex-direction: column;
+  }
+
+  .parchment {
+    background: #FFF3E0; width: 80%; max-width: 320px; padding: 30px 20px;
+    text-align: center; border-radius: 10px; box-shadow: 0 0 0 8px #8D6E63, 0 20px 40px rgba(0,0,0,0.5);
+    position: relative; border: 2px solid #5D4037;
+  }
+  .parchment h2 { font-family: 'Fredoka One', cursive; color: #E65100; font-size: 24px; margin: 0; }
+  .form-group { margin: 15px 0; }
+  input[type="text"] {
+    width: 90%; padding: 10px; border-radius: 8px; border: 2px solid #8D6E63;
+    font-family: 'Nunito', sans-serif; font-weight: bold; font-size: 16px; outline: none; text-align: center;
+  }
+  .btn-action {
+    background: linear-gradient(to bottom, #29B6F6, #0288D1); color: white; border: none; padding: 12px 30px;
+    font-family: 'Fredoka One', cursive; font-size: 20px; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 6px 0 #01579B; width: 100%; max-width: 200px;
+  }
+  .btn-action:disabled { background: #ccc; cursor: not-allowed; box-shadow: 0 6px 0 #999; }
+
+  /* --- 8. HUD --- */
+  .hud-pill {
+    position: absolute; top: 25px; padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 30px;
+    font-family: 'Fredoka One', cursive; color: #fff; font-size: 18px;
+    text-shadow: 0 2px 2px rgba(0,0,0,0.3); z-index: 100; display: flex; align-items: center; gap: 8px;
+  }
+  #score-board { left: 20px; } #level-board { right: 20px; }
+  #nickname-display { position: absolute; top: 70px; left: 20px; font-family: 'Fredoka One', cursive; color: #fff; font-size: 16px; text-shadow: 0 2px 2px rgba(0,0,0,0.5); z-index: 100; }
+
+  /* BG Upload */
+  #bg-upload-container { position: absolute; top: 10px; left: 10px; z-index: 1000; opacity: 0.3; }
+  #bg-upload-container:hover { opacity: 1; }
+  #file-input { display: none; }
+  .upload-btn { background: rgba(0,0,0,0.5); color: white; padding: 5px; border-radius: 5px; cursor: pointer; font-size: 10px; border: 1px solid white; }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  
+  <div class="sand-bank sb-left"></div>
+  <div class="sand-bank sb-right">
+    <div class="palm-trunk"></div>
+    <div class="palm-leaves">
+      <div class="leaf l1"></div><div class="leaf l2"></div><div class="leaf l3"></div>
+      <div class="leaf l4"></div><div class="leaf l5"></div><div class="leaf l6"></div>
+    </div>
+  </div>
+
+  <div id="bg-upload-container">
+    <label for="file-input" class="upload-btn">📷 BG</label>
+    <input type="file" id="file-input" accept="image/*">
+  </div>
+
+  <div id="welcome-screen">
+    <div class="logo-container">
+      <div class="logo-text word-turtle">TURTLE</div>
+      <div class="logo-text word-bridge">BRIDGE</div>
+      <div class="logo-text word-fun">FUN</div>
+    </div>
+
+    <div class="decor-turtle">🐢</div>
+
+    <button class="btn-start-big" id="btn-welcome-start">START</button>
+  </div>
+
+  <div id="registration-screen" class="modal-overlay">
+    <div class="parchment">
+      <h2>Who is playing?</h2>
+      <div class="form-group">
+        <input type="text" id="nickname-input" placeholder="Enter Nickname" maxlength="10">
+      </div>
+      <div style="margin-bottom:15px; font-size:14px; color:#5D4037;">
+        <input type="checkbox" id="agreement-check"> <label for="agreement-check">I agree to the rules</label>
+      </div>
+      <button class="btn-action" id="btn-enter-game" disabled>GO!</button>
+    </div>
+  </div>
+
+  <div id="score-board" class="hud-pill" style="display:none;">
+    <span>💰</span> <span id="score-val">0</span>
+  </div>
+  <div id="level-board" class="hud-pill" style="display:none;">
+    Lvl <span id="level-val">1</span>
+  </div>
+  <div id="nickname-display"></div>
+
+  <div id="bridge-area">
+    <div class="bridge-container">
+      <div class="rope rope-left"></div>
+      <div class="rope rope-right"></div>
+      <div id="game-layer"></div>
+    </div>
+    <div id="player" style="display:none;">🐢</div>
+  </div>
+
+  <div id="game-over-screen" class="modal-overlay">
+    <div class="parchment">
+      <h2>Game Over</h2>
+      <h1 style="font-family:'Titan One'; color:#D84315; font-size:40px;">SPLASH!</h1>
+      <div>Score: <span id="final-score" style="font-weight:bold; font-size:30px;">0</span></div>
+      <br>
+      <button class="btn-action" onclick="resetGame()">Try Again</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* --- UI ELEMENTS --- */
+  const welcomeScreen = document.getElementById('welcome-screen');
+  const regScreen = document.getElementById('registration-screen');
+  const gameOverScreen = document.getElementById('game-over-screen');
+  const welcomeBtn = document.getElementById('btn-welcome-start');
+  const enterBtn = document.getElementById('btn-enter-game');
+  const nickInput = document.getElementById('nickname-input');
+  const agreeCheck = document.getElementById('agreement-check');
+  const nickDisplay = document.getElementById('nickname-display');
+  const scoreBoard = document.getElementById('score-board');
+  const levelBoard = document.getElementById('level-board');
+  
+  const gameLayer = document.getElementById('game-layer');
+  const player = document.getElementById('player');
+  const scoreEl = document.getElementById('score-val');
+  const levelEl = document.getElementById('level-val');
+  const finalScoreEl = document.getElementById('final-score');
+  
+  const bgUpload = document.getElementById('file-input');
+  const gameContainer = document.getElementById('game-container');
+
+  /* --- IMAGE UPLOADER --- */
+  bgUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = (ev) => { gameContainer.style.backgroundImage = `url('${ev.target.result}')`; };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  /* --- FLOW CONTROL --- */
+  // 1. Welcome Screen Button
+  welcomeBtn.addEventListener('click', () => {
+    welcomeScreen.style.transition = 'top 0.5s ease-in';
+    welcomeScreen.style.top = '-100%'; // Slide up
+    regScreen.style.display = 'flex'; // Show Reg
+  });
+
+  // 2. Registration Validation
+  function checkReg() {
+    enterBtn.disabled = !(nickInput.value.trim().length > 0 && agreeCheck.checked);
+  }
+  nickInput.addEventListener('input', checkReg);
+  agreeCheck.addEventListener('change', checkReg);
+
+  // 3. Start Game
+  enterBtn.addEventListener('click', () => {
+    nickDisplay.innerText = nickInput.value.trim();
+    regScreen.style.display = 'none';
+    
+    // Show HUD & Player
+    player.style.display = 'flex';
+    scoreBoard.style.display = 'flex';
+    levelBoard.style.display = 'flex';
+    
+    startGame();
+  });
+
+  /* --- GAME ENGINE --- */
+  const config = { speed: 6, spawnRate: 50 };
+  let state = { isPlaying: false, score: 0, level: 1, frames: 0, playerLane: 1, elements: [], animId: null };
+  const LANES = [10, 50, 90]; // Percentages relative to bridge width
+
+  function movePlayer(dir) {
+    if(!state.isPlaying) return;
+    state.playerLane += dir;
+    if(state.playerLane < 0) state.playerLane = 0;
+    if(state.playerLane > 2) state.playerLane = 2;
+    player.style.left = (50 + (state.playerLane - 1) * 25) + '%'; // Simple offset calc
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowLeft') movePlayer(-1);
+    if(e.key === 'ArrowRight') movePlayer(1);
+  });
+  
+  document.addEventListener('touchstart', (e) => {
+    if(!state.isPlaying) return;
+    if(e.touches[0].clientX < window.innerWidth/2) movePlayer(-1);
+    else movePlayer(1);
+  });
+
+  function startGame() {
+    state.isPlaying = true; state.score = 0; state.level = 1; state.speed = 6; state.elements = []; state.frames = 0;
+    gameLayer.innerHTML = '';
+    gameOverScreen.style.display = 'none';
+    scoreEl.innerText = '0'; levelEl.innerText = '1';
+    state.playerLane = 1;
+    player.style.left = '50%';
+    loop();
+  }
+
+  function loop() {
+    if(!state.isPlaying) return;
+    state.frames++;
+    if(state.frames % config.spawnRate === 0) spawnRow();
+    
+    // Level Up
+    if(state.frames % 500 === 0) {
+      state.level++; state.speed += 0.5;
+      levelEl.innerText = state.level;
+    }
+
+    moveElements();
+    checkCollisions();
+    state.animId = requestAnimationFrame(loop);
+  }
+
+  function spawnRow() {
+    // Plank
+    const plank = document.createElement('div');
+    plank.className = 'plank';
+    plank.style.top = '-50px'; plank.style.left = '5%'; plank.style.width = '90%';
+    gameLayer.appendChild(plank);
+    state.elements.push({ type: 'plank', el: plank, y: -50, lane: -1 });
+
+    // Item
+    const rng = Math.random();
+    const lane = Math.floor(Math.random()*3);
+    const lanePos = (5 + 15 + (lane * 33)) + '%'; // Approx center of lane
+
+    if(rng > 0.6) {
+      const rock = document.createElement('div');
+      rock.className = 'rock'; rock.style.top='-50px'; rock.style.left = lanePos;
+      gameLayer.appendChild(rock);
+      state.elements.push({ type: 'rock', el: rock, y: -50, lane: lane });
+    } else if (rng > 0.3) {
+      const coin = document.createElement('div');
+      coin.className = 'coin'; coin.style.top='-50px'; coin.style.left = lanePos;
+      coin.innerText = '💰';
+      gameLayer.appendChild(coin);
+      state.elements.push({ type: 'coin', el: coin, y: -50, lane: lane });
+    }
+  }
+
+  function moveElements() {
+    state.elements = state.elements.filter(item => {
+      item.y += state.speed;
+      item.el.style.top = item.y + 'px';
+      if(item.y > 850) {
+        item.el.remove();
+        if(item.type === 'plank') { state.score++; scoreEl.innerText = state.score; }
+        return false;
+      }
+      return true;
+    });
+  }
+
+  function checkCollisions() {
+    const playerRect = player.getBoundingClientRect();
+    for(let i=state.elements.length-1; i>=0; i--){
+      const item = state.elements[i];
+      if(item.lane === -1) continue; // Ignore planks
+      
+      const itemRect = item.el.getBoundingClientRect();
+      const overlap = !(playerRect.right < itemRect.left + 10 || 
+                        playerRect.left > itemRect.right - 10 || 
+                        playerRect.bottom < itemRect.top + 10 || 
+                        playerRect.top > itemRect.bottom - 10);
+      
+      if(overlap) {
+        if(item.type === 'rock') gameOver();
+        else if(item.type === 'coin') {
+          state.score += 50; scoreEl.innerText = state.score;
+          item.el.remove(); state.elements.splice(i,1);
+        }
+      }
+    }
+  }
+
+  function gameOver() {
+    state.isPlaying = false;
+    cancelAnimationFrame(state.animId);
+    finalScoreEl.innerText = state.score;
+    gameOverScreen.style.display = 'flex';
+  }
+
+  function resetGame() {
+    startGame();
+  }
+
+</script>
+</body>
+</html>
